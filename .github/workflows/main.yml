@@ -1,0 +1,43 @@
+name: CI/CD Bot Pipeline
+
+on:
+  push:
+    branches:
+      - bot/dev
+      - bot/prod
+
+jobs:
+  deploy_to_dev:
+    if: github.ref == 'refs/heads/bot/dev'
+    name: Deploy Bot to Dev Server
+    runs-on: self-hosted
+    env:
+      WORK_DIR: ${{ secrets.WORK_DIR }}
+    steps:
+      - name: Git Pull
+        uses: actions/checkout@v3
+      - name: Deploy Bot to server
+        continue-on-error: true
+        run: |
+          echo "Deploying Bot to Dev server..."
+          rsync -av --no-group --omit-dir-times --delete "${{ github.workspace }}/" "${{ env.WORK_DIR }}/"
+          cp -p "/DiscordBot/data/starter.sh" "${{ env.WORK_DIR }}/"
+          cp -p "/DiscordBot/data/Development/.env" "${{ env.WORK_DIR }}/"
+
+
+  deploy_to_prod:
+    if: github.ref == 'refs/heads/bot/prod'
+    name: Deploy Bot to Prod Server
+    runs-on: self-hosted
+    env:
+      PROD_DIR: ${{ secrets.PROD_DIR }}
+    steps:
+      - name: Git Pull
+        uses: actions/checkout@v3
+      - name: Deploy Bot to server
+        continue-on-error: true
+        run: |
+          echo "Deploying Bot to Prod server..."
+          rsync -av --no-group --omit-dir-times --delete "${{ github.workspace }}/" "${{ env.PROD_DIR }}/"
+          cp -p "/DiscordBot/data/starter.sh" "${{ env.PROD_DIR }}/"
+          cp -p "/DiscordBot/data/Production/.env" "${{ env.PROD_DIR }}/"
